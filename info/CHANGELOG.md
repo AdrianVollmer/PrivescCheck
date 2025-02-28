@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-XX-XX
+
+### Added
+
+- Option to hide items with severity "none" in HTML report
+
 ## 2025-02-25
 
 ### Added

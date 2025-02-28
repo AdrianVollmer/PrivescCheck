@@ -510,6 +510,7 @@ tbody td:nth-child(5) {
 .bg_orange_light { background-color: #fff7ea; }
 .bg_red_light { background-color: #ffeaea; }
 .bg_grey_light { background-color: #f8f8f8; }
+#hide-none:checked ~ table tr.bg_grey_light { display: none; }
 "@
 
     $Html = @"
@@ -521,6 +522,7 @@ $($Css)
 </style>
 </head>
 <body>
+<input type="checkbox" id="hide-none"> Hide items with severity "None"
 BODY_TO_REPLACE
 <script>
 $($JavaScript)
