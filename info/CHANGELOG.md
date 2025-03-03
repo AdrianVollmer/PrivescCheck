@@ -1,5 +1,11 @@
 # Changelog
 
+## 2025-XX-XX
+
+### Added
+
+- Make table in HTML report interactive.
+
 ## 2025-02-25
 
 ### Added

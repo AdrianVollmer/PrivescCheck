@@ -418,29 +418,148 @@ var cells = document.getElementsByTagName('td');
 for (var i = 0; i < cells.length; i++) {
     var bg_color = null;
     var bg_color_row = null;
+    let severity = null;
     if (cells[i].innerHTML == "Low") {
         bg_color = "bg_blue";
         bg_color_row = "bg_blue_light";
+        severity = 1;
     } else if (cells[i].innerHTML == "Medium") {
         bg_color = "bg_orange";
         bg_color_row = "bg_orange_light";
+        severity = 2;
     } else if (cells[i].innerHTML == "High") {
         bg_color = "bg_red";
         bg_color_row = "bg_red_light";
+        severity = 3;
     } else if (cells[i].innerHTML == "None") {
         bg_color = "bg_grey";
         bg_color_row = "bg_grey_light";
+        severity = 0;
     }
 
     if (bg_color) {
         if (bg_color_row) { cells[i].parentElement.classList.add(bg_color_row); }
         cells[i].innerHTML = "<span class=\"label " + bg_color + "\">" + cells[i].innerHTML + "</span>";
+        cells[i].dataset.severity = severity;
     }
 
     // If a cell is too large, we need to make it scrollable. But 'td' elements are not
     // scrollable so, we need make it a 'div' first and apply the 'scroll' (c.f. CSS) style to make
     // it scrollable.
     cells[i].innerHTML = "<div class=\"scroll\">" + cells[i].innerHTML + "</div>";
+}
+
+
+function sortTable(columnIndex) {
+    const table = document.getElementsByTagName("table")[0];
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr")).slice(1);
+    const isAscending = table.dataset.sortOrder === "asc";
+
+    rows.sort((rowA, rowB) => {
+        const cellA = rowA.cells[columnIndex].dataset.severity || rowA.cells[columnIndex].textContent.trim();
+        const cellB = rowB.cells[columnIndex].dataset.severity || rowB.cells[columnIndex].textContent.trim();
+
+        return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+    });
+
+    for (const row of rows) {
+        row.remove();
+    }
+
+    tbody.append(...rows);
+
+    table.dataset.sortOrder = isAscending ? "desc" : "asc";
+}
+
+
+function createPopupMenu(button, options) {
+    if (!button) return;
+
+    const popup = document.createElement("div");
+    popup.style.position = "absolute";
+    popup.style.background = "white";
+    popup.style.border = "1px solid #ccc";
+    popup.style.padding = "10px";
+    popup.style.boxShadow = "0 2px 10px rgba(0,0,0,0.2)";
+    popup.style.display = "none";
+    popup.style.zIndex = "1000";
+    popup.style.borderRadius = "5px";
+
+    options.forEach(option => {
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = option.value;
+        checkbox.checked = option.checked || false;
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(" " + option.label));
+        popup.appendChild(label);
+        popup.appendChild(document.createElement("br"));
+    });
+
+    const btnOk = document.createElement("button");
+    btnOk.textContent = "OK";
+    btnOk.style.marginRight = "5px";
+    btnOk.onclick = () => {
+        const selected = Array.from(popup.querySelectorAll("input[type=checkbox]"))
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+        for (const row of document.getElementsByTagName("tr")) {
+            const severity = row.querySelector("span.label")?.closest("td").dataset.severity;
+            row.style.display = (selected.includes(severity) || (!severity)) ? "" : "none";
+        };
+        popup.style.display = "none";
+    };
+
+    const btnCancel = document.createElement("button");
+    btnCancel.textContent = "Cancel";
+    btnCancel.onclick = () => {
+        popup.style.display = "none";
+    };
+
+    popup.appendChild(btnOk);
+    popup.appendChild(btnCancel);
+    document.body.appendChild(popup);
+
+    button.addEventListener("click", (event) => {
+        const rect = button.getBoundingClientRect();
+        popup.style.top = `${rect.bottom + window.scrollY}px`;
+        popup.style.left = `${rect.left + window.scrollX}px`;
+        popup.style.display = popup.style.display === "none" ? "block" : "none";
+    });
+}
+
+var headerCells = document.querySelectorAll('th');
+
+for (const [idx, cell] of headerCells.entries()) {
+    const sortButton = document.createElement("a");
+
+    sortButton.href = '#';
+    sortButton.innerHTML = "&#8645;";
+    sortButton.classList.add("tool-button");
+
+    sortButton.addEventListener("click", (e) => sortTable(idx));
+
+    cell.append(" ");
+    cell.append(sortButton);
+
+    // Add filter button on severity column
+    if (idx === 3) {
+        const filterButton = document.createElement("a");
+        filterButton.href = '#';
+        filterButton.innerHTML = "&#10729;";
+        filterButton.classList.add("tool-button");
+        createPopupMenu(filterButton, [
+            { label: "None", value: 0, checked: true },
+            { label: "Low", value: 1, checked: true },
+            { label: "Medium", value: 2, checked: true },
+            { label: "High", value: 3, checked: true },
+        ]);
+        cell.append(" ");
+        cell.append(filterButton);
+    }
+
 }
 "@
 
